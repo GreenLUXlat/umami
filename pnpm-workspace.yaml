@@ -1,9 +1,48 @@
 packages:
   - '**'
+
+# ── Scripts de instalacion permitidos ────────────────────────────────────────
+# Prisma NECESITA su script de post-instalacion: es el que genera su cliente y
+# baja los motores. Sin el, `prisma generate` no tiene nada que generar y la
+# compilacion muere.
+#
+# Este archivo declaraba esa misma intencion con `onlyBuiltDependencies` e
+# `ignoredBuiltDependencies`, que son los campos de pnpm 10. **pnpm 11 los
+# elimino** y los reemplazo por `allowBuilds`, que es un mapa en vez de dos
+# listas.
+#
+# El fallo que esto arregla era silencioso y por eso costo verlo: pnpm 11 no
+# avisa de que esos campos ya no existen, simplemente no aprueba nada — asi que
+# los tres paquetes de Prisma que el archivo permitia explicitamente quedaban
+# bloqueados igual que el resto, y la instalacion terminaba en
+# ERR_PNPM_IGNORED_BUILDS sin decir por que.
+#
+# Medido en el servidor: Hostinger compila con pnpm 11.21.0.
+#
+# Se conservan ABAJO los campos viejos a proposito. No estorban —pnpm 11 los
+# ignora— y sirven si algun dia este repositorio se compila con pnpm 10, donde
+# `allowBuilds` es el que no existe. Asi el archivo funciona con las dos.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true
+  # Estos tres estaban en `ignoredBuiltDependencies`: son de pruebas y de
+  # imagenes, y su script no hace falta para compilar. Se declaran en `false`
+  # y no se omiten, porque un paquete con script sin declarar vuelve a parar
+  # la instalacion — que es justo lo que se quiere cuando aparezca uno nuevo.
+  cypress: false
+  esbuild: false
+  sharp: false
+  # No estaba en ninguna lista y por eso tambien salia en el error. Es el
+  # resolvedor de eslint: no se usa al compilar.
+  unrs-resolver: false
+
+# ── Compatibilidad con pnpm 10 (ver arriba) ──────────────────────────────────
 ignoredBuiltDependencies:
   - cypress
   - esbuild
   - sharp
+  - unrs-resolver
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
