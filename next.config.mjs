@@ -179,6 +179,21 @@ if (cloudMode && cloudUrl) {
 /** @type {import('next').NextConfig} */
 export default {
   reactStrictMode: false,
+  /* ── Freno de procesos para hosting compartido ──────────────────────────
+     `next build` decide cuantos trabajadores lanzar mirando os.cpus(), y en
+     un servidor compartido eso son los nucleos de la MAQUINA FISICA (decenas)
+     y no los del plan (2). Medido el 11-ago-2026 en Hostinger: la compilacion
+     disparo el uso hasta el tope de 120 procesos de la cuenta y LiteSpeed se
+     quedo sin huecos para atender PHP — la tienda que convive en esta cuenta
+     respondio 503 durante ~9 minutos.
+
+     `cpus: 2` fija los trabajadores de generacion estatica a los nucleos
+     reales del plan, y `workerThreads: false` evita el segundo nivel de
+     paralelismo. La compilacion tarda mas; a cambio no tumba nada. */
+  experimental: {
+    cpus: 2,
+    workerThreads: false,
+  },
   env: {
     basePath,
     cloudMode,
